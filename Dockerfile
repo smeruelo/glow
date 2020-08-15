@@ -1,9 +1,9 @@
 FROM golang:1.15 AS builder
 WORKDIR /app
 COPY . /app
-RUN go build -a -v -o glow
+RUN CGO_ENABLED=1 go build -a --ldflags '-linkmode external -extldflags "-static"' -o glow
 
-FROM golang:1.15
+FROM alpine:latest
 WORKDIR /glow
 COPY --from=builder /app/glow .
 EXPOSE 9000
