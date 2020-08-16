@@ -7,12 +7,26 @@ import (
 	"os"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 )
 
 type Project struct {
 	Name     string `json:"Name"`
 	Goal     int    `json:"Goal"`
 	Achieved int    `json:"Achieved"`
+}
+
+func fetchProjectByID(c redis.Conn, uuid uuid.UUID) (Project, bool) {
+	pJSON, err := redis.Bytes(c.Do("HGET", "projects", uuid.String()))
+	if err != nil {
+		return Project{}, false
+	}
+	var p Project
+	if err := json.Unmarshal(pJSON, &p); err != nil {
+		log.Printf("Unable to unmarshal project: %s", err)
+		return Project{}, false
+	}
+	return p, true
 }
 
 func main() {
