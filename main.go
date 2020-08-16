@@ -10,9 +10,9 @@ import (
 )
 
 type Project struct {
-	Name     string
-	Goal     int
-	Achieved int
+	Name     string `json:"Name"`
+	Goal     int    `json:"Goal"`
+	Achieved int    `json:"Achieved"`
 }
 
 func main() {
