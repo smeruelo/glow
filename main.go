@@ -44,7 +44,7 @@ func main() {
 		i := 0
 		for _, pJSON := range projectsJSON {
 			var p Project
-			if err = json.Unmarshal([]byte(pJSON), &p); err != nil {
+			if err := json.Unmarshal([]byte(pJSON), &p); err != nil {
 				log.Printf("Unable to unmarshal project: %s", err)
 			} else {
 				projects[i] = p
