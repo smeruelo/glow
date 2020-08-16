@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
+
+	"github.com/gomodule/redigo/redis"
 )
 
 type Project struct {
@@ -19,6 +22,22 @@ var projects = []Project{
 }
 
 func main() {
+	dbHost, ok := os.LookupEnv("DB_HOST")
+	if !ok {
+		log.Fatal("Environment variable DB_HOST not found")
+	}
+
+	dbPort, ok := os.LookupEnv("DB_PORT")
+	if !ok {
+		log.Fatal("Environment variable DB_PORT not found")
+	}
+
+	c, err := redis.Dial("tcp", dbHost+":"+dbPort)
+	if err != nil {
+		log.Printf("Unable to connect to database: %s", err)
+	}
+	defer c.Close()
+
 	http.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
 		b, err := json.Marshal(projects)
 		if err != nil {
