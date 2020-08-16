@@ -6,5 +6,5 @@ RUN CGO_ENABLED=1 go build -a --ldflags '-linkmode external -extldflags "-static
 FROM alpine:latest
 WORKDIR /glow
 COPY --from=builder /app/glow .
-EXPOSE 9000
+EXPOSE 80
 CMD ["./glow"]
