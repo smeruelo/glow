@@ -6,6 +6,7 @@ package graph
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gomodule/redigo/redis"
@@ -33,6 +34,10 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 		i++
 	}
 	return projects, nil
+}
+
+func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Query returns generated.QueryResolver implementation.
