@@ -22,12 +22,13 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 
 	projects := make([]*model.Project, len(projectsJSON))
 	i := 0
-	for _, pJSON := range projectsJSON {
+	for id, pJSON := range projectsJSON {
 		var p model.Project
 		if err := json.Unmarshal([]byte(pJSON), &p); err != nil {
 			log.Printf("Unable to unmarshal project: %s", err)
 			return nil, err
 		}
+		p.ID = id
 		projects[i] = &p
 		i++
 	}
