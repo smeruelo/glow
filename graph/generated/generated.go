@@ -45,6 +45,7 @@ type ComplexityRoot struct {
 	Project struct {
 		Achieved func(childComplexity int) int
 		Goal     func(childComplexity int) int
+		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
 	}
 
@@ -85,6 +86,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Project.Goal(childComplexity), true
+
+	case "Project.id":
+		if e.complexity.Project.ID == nil {
+			break
+		}
+
+		return e.complexity.Project.ID(childComplexity), true
 
 	case "Project.name":
 		if e.complexity.Project.Name == nil {
@@ -151,6 +159,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `type Project {
+  id: ID!
   name: String!
   goal: Int!
   achieved: Int!
@@ -219,6 +228,40 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Project_id(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Project",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Project_name(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
 	defer func() {
@@ -1499,6 +1542,11 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Project")
+		case "id":
+			out.Values[i] = ec._Project_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Project_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -1821,6 +1869,21 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalID(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalID(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")

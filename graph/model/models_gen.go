@@ -3,6 +3,7 @@
 package model
 
 type Project struct {
+	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Goal     int    `json:"goal"`
 	Achieved int    `json:"achieved"`
