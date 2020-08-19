@@ -5,23 +5,33 @@ package graph
 
 import (
 	"context"
+	"encoding/json"
+	"log"
 
+	"github.com/gomodule/redigo/redis"
 	"github.com/smeruelo/glow/graph/generated"
 	"github.com/smeruelo/glow/graph/model"
 )
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
-	p1 := model.Project{
-		Name:     "p1",
-		Goal:     10,
-		Achieved: 0,
+	projectsJSON, err := redis.StringMap(r.db.Do("HGETALL", "projects"))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return nil, err
 	}
-	p2 := model.Project{
-		Name:     "p2",
-		Goal:     80,
-		Achieved: 0,
+
+	projects := make([]*model.Project, len(projectsJSON))
+	i := 0
+	for _, pJSON := range projectsJSON {
+		var p model.Project
+		if err := json.Unmarshal([]byte(pJSON), &p); err != nil {
+			log.Printf("Unable to unmarshal project: %s", err)
+			return nil, err
+		}
+		projects[i] = &p
+		i++
 	}
-	return []*model.Project{&p1, &p2}, nil
+	return projects, nil
 }
 
 // Query returns generated.QueryResolver implementation.

@@ -44,14 +44,14 @@ func main() {
 		log.Fatal("Environment variable DB_PORT not found")
 	}
 
-	c, err := redis.Dial("tcp", dbHost+":"+dbPort)
+	db, err := redis.Dial("tcp", dbHost+":"+dbPort)
 	if err != nil {
 		log.Printf("Unable to connect to database: %s", err)
 	}
-	defer c.Close()
+	defer db.Close()
 
 	http.HandleFunc("/projects", func(w http.ResponseWriter, r *http.Request) {
-		projectsJSON, err := redis.StringMap(c.Do("HGETALL", "projects"))
+		projectsJSON, err := redis.StringMap(db.Do("HGETALL", "projects"))
 		if err != nil {
 			log.Printf("Database error: %s", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -79,7 +79,7 @@ func main() {
 	})
 
 	graphqlServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
-		Resolvers: &graph.Resolver{},
+		Resolvers: graph.NewResolver(db),
 	}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
