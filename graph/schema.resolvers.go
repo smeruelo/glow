@@ -6,7 +6,6 @@ package graph
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 
 	"github.com/gomodule/redigo/redis"
@@ -37,7 +36,18 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 }
 
 func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	pJSON, err := redis.Bytes(r.db.Do("HGET", "projects", id))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return nil, err
+	}
+	var p model.Project
+	if err := json.Unmarshal(pJSON, &p); err != nil {
+		log.Printf("Unable to unmarshal project: %s", err)
+		return nil, err
+	}
+	p.ID = id
+	return &p, nil
 }
 
 // Query returns generated.QueryResolver implementation.
