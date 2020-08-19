@@ -5,14 +5,23 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/smeruelo/glow/graph/generated"
 	"github.com/smeruelo/glow/graph/model"
 )
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	p1 := model.Project{
+		Name:     "p1",
+		Goal:     10,
+		Achieved: 0,
+	}
+	p2 := model.Project{
+		Name:     "p2",
+		Goal:     80,
+		Achieved: 0,
+	}
+	return []*model.Project{&p1, &p2}, nil
 }
 
 // Query returns generated.QueryResolver implementation.
