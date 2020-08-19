@@ -6,8 +6,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gomodule/redigo/redis"
 	"github.com/google/uuid"
+	"github.com/smeruelo/glow/graph"
+	"github.com/smeruelo/glow/graph/generated"
 )
 
 type Project struct {
@@ -73,6 +77,13 @@ func main() {
 		}
 		w.Write(output)
 	})
+
+	graphqlServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
+		Resolvers: &graph.Resolver{},
+	}))
+
+	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	http.Handle("/query", graphqlServer)
 
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
