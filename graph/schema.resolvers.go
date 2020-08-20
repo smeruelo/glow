@@ -10,12 +10,33 @@ import (
 	"log"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/google/uuid"
 	"github.com/smeruelo/glow/graph/generated"
 	"github.com/smeruelo/glow/graph/model"
 )
 
 func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error) {
-	panic(fmt.Errorf("not implemented"))
+	p := model.Project{
+		ID:       uuid.New().String(),
+		Name:     input.Name,
+		Goal:     input.Goal,
+		Achieved: 0,
+	}
+	pJSON, err := json.Marshal(p)
+	if err != nil {
+		log.Printf("Unable to marshal project: %s", err)
+		return nil, err
+	}
+	n, err := redis.Int64(r.db.Do("HSETNX", "projects", p.ID, pJSON))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return nil, err
+	}
+	if n != 1 {
+		log.Printf("Project %s already exists", p.ID)
+		return nil, fmt.Errorf("Project %s already exists", p.ID)
+	}
+	return &p, nil
 }
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
