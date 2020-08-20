@@ -2,6 +2,11 @@
 
 package model
 
+type NewProject struct {
+	Name string `json:"name"`
+	Goal int    `json:"goal"`
+}
+
 type Project struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`

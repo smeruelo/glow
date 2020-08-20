@@ -6,12 +6,17 @@ package graph
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/smeruelo/glow/graph/generated"
 	"github.com/smeruelo/glow/graph/model"
 )
+
+func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error) {
+	panic(fmt.Errorf("not implemented"))
+}
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
 	projectsJSON, err := redis.StringMap(r.db.Do("HGETALL", "projects"))
@@ -50,7 +55,11 @@ func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project,
 	return &p, nil
 }
 
+// Mutation returns generated.MutationResolver implementation.
+func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
+
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }

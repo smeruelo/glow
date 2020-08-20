@@ -9,3 +9,12 @@ type Query {
   projects: [Project!]!
   project(id: ID!): Project
 }
+
+input NewProject {
+  name: String!
+  goal: Int!
+}
+
+type Mutation {
+  createProject(input: NewProject!): Project!
+}
