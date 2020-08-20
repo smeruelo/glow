@@ -39,6 +39,10 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewPro
 	return &p, nil
 }
 
+func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
 	projectsJSON, err := redis.StringMap(r.db.Do("HGETALL", "projects"))
 	if err != nil {
