@@ -40,7 +40,16 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewPro
 }
 
 func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	n, err := redis.Int64(r.db.Do("HDEL", "projects", id))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return id, err
+	}
+	if n < 1 {
+		log.Printf("Project %s does not exist", id)
+		return id, fmt.Errorf("Project %s does not exist", id)
+	}
+	return id, nil
 }
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
