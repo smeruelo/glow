@@ -1,15 +1,15 @@
 package graph
 
-import "github.com/gomodule/redigo/redis"
+import (
+	"github.com/smeruelo/glow/storage"
+)
 
-// This file will not be regenerated automatically.
-//
-// It serves as dependency injection for your app, add any dependencies you require here.
-
+// Resolver contains the dependencies needed to build the schema resolvers
 type Resolver struct {
-	db redis.Conn
+	store storage.Store
 }
 
-func NewResolver(db redis.Conn) *Resolver {
-	return &Resolver{db: db}
+// NewResolver receives a DB store and creates a Resolver with it.
+func NewResolver(s storage.Store) *Resolver {
+	return &Resolver{store: s}
 }

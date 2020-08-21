@@ -10,6 +10,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/smeruelo/glow/graph"
 	"github.com/smeruelo/glow/graph/generated"
+	"github.com/smeruelo/glow/storage"
 )
 
 func main() {
@@ -28,9 +29,10 @@ func main() {
 		log.Printf("Unable to connect to database: %s", err)
 	}
 	defer db.Close()
+	store := storage.NewRedisStore(db)
 
 	graphqlServer := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
-		Resolvers: graph.NewResolver(db),
+		Resolvers: graph.NewResolver(store),
 	}))
 
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
