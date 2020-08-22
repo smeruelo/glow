@@ -1,3 +1,5 @@
+//go:generate mockery --name Store
+
 package storage
 
 import "github.com/smeruelo/glow/graph/model"
