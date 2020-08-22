@@ -168,3 +168,44 @@ func TestDeleteProjectFail(t *testing.T) {
 	assert.Error(t, err)
 	s.AssertExpectations(t)
 }
+
+func TestUpdateProjectAchievedSuccess(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	time := 60
+	p := model.Project{
+		ID:       id,
+		Name:     "Test",
+		Goal:     100,
+		Achieved: 80,
+	}
+	expected := &p
+
+	s.On("UpdateAchieved", id, time).Return(p, nil)
+
+	actual, err := r.UpdateProjectAchieved(ctx, id, time)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestUpdateProjectAchievedFail(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	time := 60
+	var p model.Project
+
+	s.On("UpdateAchieved", id, time).Return(p, errors.New(""))
+
+	_, err := r.UpdateProjectAchieved(ctx, id, time)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
