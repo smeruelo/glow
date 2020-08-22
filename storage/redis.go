@@ -83,3 +83,8 @@ func (s redisStore) Delete(id string) error {
 	}
 	return nil
 }
+
+func (s redisStore) UpdateAchieved(id string, time int) (model.Project, error) {
+	var p model.Project
+	return p, nil
+}

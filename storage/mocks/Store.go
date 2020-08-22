@@ -83,3 +83,24 @@ func (_m *Store) GetAll() ([]model.Project, error) {
 
 	return r0, r1
 }
+
+// UpdateAchieved provides a mock function with given fields: id, time
+func (_m *Store) UpdateAchieved(id string, time int) (model.Project, error) {
+	ret := _m.Called(id, time)
+
+	var r0 model.Project
+	if rf, ok := ret.Get(0).(func(string, int) model.Project); ok {
+		r0 = rf(id, time)
+	} else {
+		r0 = ret.Get(0).(model.Project)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, int) error); ok {
+		r1 = rf(id, time)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}

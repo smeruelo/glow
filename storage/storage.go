@@ -10,4 +10,5 @@ type Store interface {
 	Get(id string) (model.Project, error)
 	GetAll() ([]model.Project, error)
 	Delete(id string) error
+	UpdateAchieved(id string, time int) (model.Project, error)
 }
