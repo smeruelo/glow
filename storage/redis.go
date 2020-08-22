@@ -84,7 +84,32 @@ func (s redisStore) Delete(id string) error {
 	return nil
 }
 
+// ToDo: Solve possible race conditions
 func (s redisStore) UpdateAchieved(id string, time int) (model.Project, error) {
 	var p model.Project
+
+	pJSON, err := redis.Bytes(s.conn.Do("HGET", "projects", id))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return p, err
+	}
+	if err := json.Unmarshal(pJSON, &p); err != nil {
+		log.Printf("Unable to unmarshal project: %s", err)
+		return p, err
+	}
+
+	p.Achieved += time
+	pJSON, err = json.Marshal(p)
+	if err != nil {
+		log.Printf("Unable to marshal project: %s", err)
+		return p, err
+	}
+
+	_, err = redis.Int64(s.conn.Do("HSET", "projects", id, pJSON))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return p, err
+	}
+
 	return p, nil
 }
