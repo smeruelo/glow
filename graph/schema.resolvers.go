@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/smeruelo/glow/graph/generated"
@@ -23,6 +24,10 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewPro
 
 func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
 	return id, r.store.Delete(id)
+}
+
+func (r *mutationResolver) UpdateProjectAchieved(ctx context.Context, id string, achievement int) (*model.Project, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
