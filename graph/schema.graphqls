@@ -1,8 +1,8 @@
 type Project {
   id: ID!
+  userID: ID!
   name: String!
-  goal: Int!
-  achieved: Int!
+  category: String!
 }
 
 type Query {
@@ -12,11 +12,11 @@ type Query {
 
 input NewProject {
   name: String!
-  goal: Int!
+  category: String!
 }
 
 type Mutation {
   createProject(input: NewProject!): Project!
-  deleteProject(id: ID!): ID!
-  updateProjectAchieved(id: ID!, achievement: Int!): Project!
+  deleteProject(id: ID!, userID: ID!): ID!
+  updateProject(id: ID!, input: NewProject!): Project!
 }

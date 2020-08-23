@@ -14,24 +14,24 @@ import (
 func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error) {
 	p := model.Project{
 		ID:       uuid.New().String(),
+		UserID:   "0",
 		Name:     input.Name,
-		Goal:     input.Goal,
-		Achieved: 0,
+		Category: input.Category,
 	}
-	return &p, r.store.Create(p)
+	return &p, r.store.CreateProject(p)
 }
 
-func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
-	return id, r.store.Delete(id)
+func (r *mutationResolver) DeleteProject(ctx context.Context, id string, userID string) (string, error) {
+	return id, r.store.DeleteProject(id, "0")
 }
 
-func (r *mutationResolver) UpdateProjectAchieved(ctx context.Context, id string, achievement int) (*model.Project, error) {
-	p, err := r.store.UpdateAchieved(id, achievement)
+func (r *mutationResolver) UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error) {
+	p, err := r.store.UpdateProject(id, input)
 	return &p, err
 }
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
-	all, err := r.store.GetAll()
+	all, err := r.store.GetUserProjects("0")
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 }
 
 func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project, error) {
-	p, err := r.store.Get(id)
+	p, err := r.store.GetProject(id)
 	return &p, err
 }
 

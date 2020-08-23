@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -14,6 +13,9 @@ type redisStore struct {
 }
 
 // NewRedisStore creates a Store that implements the interface for a Redis storage
+// This storage implementation does not take into account race conditions yet
+// Therefore, IT DOES NOT SUPPORT CONCURRENCY
+//
 // DB schema:
 //
 // |------------------------------|------------|------------------------------------------------------|
@@ -35,98 +37,138 @@ func NewRedisStore(conn redis.Conn) Store {
 	return redisStore{conn: conn}
 }
 
-func (s redisStore) Create(p model.Project) error {
-	pJSON, err := json.Marshal(p)
-	if err != nil {
-		log.Printf("Unable to marshal project: %s", err)
-		return err
-	}
-	n, err := redis.Int64(s.conn.Do("HSETNX", "projects", p.ID, pJSON))
+// Redis keys and hashes' fields
+const (
+	sCategory  string = "category"
+	sName      string = "name"
+	sProject   string = "project"
+	sProjectID string = "projectID"
+	sProjects  string = "projects"
+	sUserID    string = "userID"
+)
+
+func (s redisStore) errIfDoesntExist(key string) error {
+	n, err := redis.Int64(s.conn.Do("EXISTS", key))
 	if err != nil {
 		log.Printf("Database error: %s", err)
 		return err
 	}
 	if n != 1 {
-		log.Printf("Project %s already exists", p.ID)
-		return fmt.Errorf("Project %s already exists", p.ID)
+		log.Printf("Key %s does not exist", key)
+		return fmt.Errorf("Key %s does not exist", key)
 	}
 	return nil
 }
 
-func (s redisStore) Get(id string) (model.Project, error) {
+func (s redisStore) CreateProject(p model.Project) error {
+	// Check if project exists
+	key := fmt.Sprintf("%s:%s", sProject, p.ID)
+	n, err := redis.Int64(s.conn.Do("EXISTS", key))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return err
+	}
+	if n == 1 {
+		log.Printf("Project %s already exists", p.ID)
+		return fmt.Errorf("Project %s already exists", p.ID)
+	}
+
+	// Create project
+	_, err = redis.Int64(s.conn.Do("HSET", key, sUserID, p.UserID, sName, p.Name, sCategory, p.Category))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return err
+	}
+
+	// Add it to user's projects
+	key = fmt.Sprintf("%s:%s", sProjects, p.UserID)
+	_, err = redis.Int64(s.conn.Do("SADD", key, p.ID))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s redisStore) getProject(id string) (model.Project, error) {
 	var p model.Project
-	pJSON, err := redis.Bytes(s.conn.Do("HGET", "projects", id))
+	key := fmt.Sprintf("%s:%s", sProject, id)
+	if err := s.errIfDoesntExist(key); err != nil {
+		return p, err
+	}
+
+	fields, err := redis.StringMap(s.conn.Do("HGETALL", key))
 	if err != nil {
 		log.Printf("Database error: %s", err)
 		return p, err
 	}
-	if err := json.Unmarshal(pJSON, &p); err != nil {
-		log.Printf("Unable to unmarshal project: %s", err)
-		return p, err
-	}
+
+	p.ID = id
+	p.UserID = fields[sUserID]
+	p.Name = fields[sName]
+	p.Category = fields[sCategory]
+
 	return p, nil
 }
 
-func (s redisStore) GetAll() ([]model.Project, error) {
-	psJSON, err := redis.StringMap(s.conn.Do("HGETALL", "projects"))
+func (s redisStore) GetProject(id string) (model.Project, error) {
+	return s.getProject(id)
+}
+
+func (s redisStore) GetUserProjects(userID string) ([]model.Project, error) {
+	key := fmt.Sprintf("%s:%s", sProjects, userID)
+	projectIDs, err := redis.Strings(s.conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Printf("Database error: %s", err)
 		return nil, err
 	}
 
-	ps := make([]model.Project, len(psJSON))
-	i := 0
-	for _, pJSON := range psJSON {
-		var p model.Project
-		if err := json.Unmarshal([]byte(pJSON), &p); err != nil {
-			log.Printf("Unable to unmarshal project: %s", err)
+	ps := make([]model.Project, len(projectIDs))
+	for i, id := range projectIDs {
+		p, err := s.getProject(id)
+		if err != nil {
 			return ps, err
 		}
 		ps[i] = p
-		i++
 	}
 	return ps, nil
 }
 
-func (s redisStore) Delete(id string) error {
-	n, err := redis.Int64(s.conn.Do("HDEL", "projects", id))
-	if err != nil {
+func (s redisStore) DeleteProject(id, userID string) error {
+	key := fmt.Sprintf("%s:%s", sProject, id)
+	if err := s.errIfDoesntExist(key); err != nil {
+		return err
+	}
+
+	if _, err := redis.Int64(s.conn.Do("DEL", key)); err != nil {
 		log.Printf("Database error: %s", err)
 		return err
 	}
-	if n < 1 {
-		log.Printf("Project %s does not exist", id)
-		return fmt.Errorf("Project %s does not exist", id)
+
+	key = fmt.Sprintf("%s:%s", sProjects, userID)
+	if _, err := redis.Int64(s.conn.Do("SREM", key, id)); err != nil {
+		log.Printf("Database error: %s", err)
+		return err
 	}
+
 	return nil
 }
 
-// ToDo: Solve possible race conditions
-func (s redisStore) UpdateAchieved(id string, time int) (model.Project, error) {
-	var p model.Project
-
-	pJSON, err := redis.Bytes(s.conn.Do("HGET", "projects", id))
+func (s redisStore) UpdateProject(id string, np model.NewProject) (model.Project, error) {
+	p, err := s.getProject(id)
 	if err != nil {
-		log.Printf("Database error: %s", err)
-		return p, err
-	}
-	if err := json.Unmarshal(pJSON, &p); err != nil {
-		log.Printf("Unable to unmarshal project: %s", err)
 		return p, err
 	}
 
-	p.Achieved += time
-	pJSON, err = json.Marshal(p)
-	if err != nil {
-		log.Printf("Unable to marshal project: %s", err)
-		return p, err
-	}
-
-	_, err = redis.Int64(s.conn.Do("HSET", "projects", id, pJSON))
+	key := fmt.Sprintf("%s:%s", sProject, id)
+	_, err = redis.Int64(s.conn.Do("HSET", key, sName, np.Name, sCategory, np.Category))
 	if err != nil {
 		log.Printf("Database error: %s", err)
 		return p, err
 	}
 
+	p.Name = np.Name
+	p.Category = np.Category
 	return p, nil
 }

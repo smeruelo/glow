@@ -3,13 +3,13 @@
 package model
 
 type NewProject struct {
-	Name string `json:"name"`
-	Goal int    `json:"goal"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
 }
 
 type Project struct {
 	ID       string `json:"id"`
+	UserID   string `json:"userID"`
 	Name     string `json:"name"`
-	Goal     int    `json:"goal"`
-	Achieved int    `json:"achieved"`
+	Category string `json:"category"`
 }

@@ -44,16 +44,16 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Mutation struct {
-		CreateProject         func(childComplexity int, input model.NewProject) int
-		DeleteProject         func(childComplexity int, id string) int
-		UpdateProjectAchieved func(childComplexity int, id string, achievement int) int
+		CreateProject func(childComplexity int, input model.NewProject) int
+		DeleteProject func(childComplexity int, id string, userID string) int
+		UpdateProject func(childComplexity int, id string, input model.NewProject) int
 	}
 
 	Project struct {
-		Achieved func(childComplexity int) int
-		Goal     func(childComplexity int) int
+		Category func(childComplexity int) int
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
+		UserID   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -64,8 +64,8 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error)
-	DeleteProject(ctx context.Context, id string) (string, error)
-	UpdateProjectAchieved(ctx context.Context, id string, achievement int) (*model.Project, error)
+	DeleteProject(ctx context.Context, id string, userID string) (string, error)
+	UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error)
 }
 type QueryResolver interface {
 	Projects(ctx context.Context) ([]*model.Project, error)
@@ -109,33 +109,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(string), args["userID"].(string)), true
 
-	case "Mutation.updateProjectAchieved":
-		if e.complexity.Mutation.UpdateProjectAchieved == nil {
+	case "Mutation.updateProject":
+		if e.complexity.Mutation.UpdateProject == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateProjectAchieved_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_updateProject_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateProjectAchieved(childComplexity, args["id"].(string), args["achievement"].(int)), true
+		return e.complexity.Mutation.UpdateProject(childComplexity, args["id"].(string), args["input"].(model.NewProject)), true
 
-	case "Project.achieved":
-		if e.complexity.Project.Achieved == nil {
+	case "Project.category":
+		if e.complexity.Project.Category == nil {
 			break
 		}
 
-		return e.complexity.Project.Achieved(childComplexity), true
-
-	case "Project.goal":
-		if e.complexity.Project.Goal == nil {
-			break
-		}
-
-		return e.complexity.Project.Goal(childComplexity), true
+		return e.complexity.Project.Category(childComplexity), true
 
 	case "Project.id":
 		if e.complexity.Project.ID == nil {
@@ -150,6 +143,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Project.Name(childComplexity), true
+
+	case "Project.userID":
+		if e.complexity.Project.UserID == nil {
+			break
+		}
+
+		return e.complexity.Project.UserID(childComplexity), true
 
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
@@ -236,9 +236,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `type Project {
   id: ID!
+  userID: ID!
   name: String!
-  goal: Int!
-  achieved: Int!
+  category: String!
 }
 
 type Query {
@@ -248,13 +248,13 @@ type Query {
 
 input NewProject {
   name: String!
-  goal: Int!
+  category: String!
 }
 
 type Mutation {
   createProject(input: NewProject!): Project!
-  deleteProject(id: ID!): ID!
-  updateProjectAchieved(id: ID!, achievement: Int!): Project!
+  deleteProject(id: ID!, userID: ID!): ID!
+  updateProject(id: ID!, input: NewProject!): Project!
 }
 `, BuiltIn: false},
 }
@@ -291,10 +291,19 @@ func (ec *executionContext) field_Mutation_deleteProject_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["userID"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("userID"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["userID"] = arg1
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateProjectAchieved_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_updateProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -306,15 +315,15 @@ func (ec *executionContext) field_Mutation_updateProjectAchieved_args(ctx contex
 		}
 	}
 	args["id"] = arg0
-	var arg1 int
-	if tmp, ok := rawArgs["achievement"]; ok {
-		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("achievement"))
-		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+	var arg1 model.NewProject
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("input"))
+		arg1, err = ec.unmarshalNNewProject2githubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐNewProject(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["achievement"] = arg1
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -451,7 +460,7 @@ func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string))
+		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string), args["userID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -468,7 +477,7 @@ func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field g
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_updateProjectAchieved(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -484,7 +493,7 @@ func (ec *executionContext) _Mutation_updateProjectAchieved(ctx context.Context,
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_updateProjectAchieved_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_updateProject_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -492,7 +501,7 @@ func (ec *executionContext) _Mutation_updateProjectAchieved(ctx context.Context,
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateProjectAchieved(rctx, args["id"].(string), args["achievement"].(int))
+		return ec.resolvers.Mutation().UpdateProject(rctx, args["id"].(string), args["input"].(model.NewProject))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -543,6 +552,40 @@ func (ec *executionContext) _Project_id(ctx context.Context, field graphql.Colle
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Project_userID(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Project",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Project_name(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -577,7 +620,7 @@ func (ec *executionContext) _Project_name(ctx context.Context, field graphql.Col
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Project_goal(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
+func (ec *executionContext) _Project_category(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -594,7 +637,7 @@ func (ec *executionContext) _Project_goal(ctx context.Context, field graphql.Col
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Goal, nil
+		return obj.Category, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -606,43 +649,9 @@ func (ec *executionContext) _Project_goal(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Project_achieved(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Project",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Achieved, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_projects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1855,11 +1864,11 @@ func (ec *executionContext) unmarshalInputNewProject(ctx context.Context, obj in
 			if err != nil {
 				return it, err
 			}
-		case "goal":
+		case "category":
 			var err error
 
-			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("goal"))
-			it.Goal, err = ec.unmarshalNInt2int(ctx, v)
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("category"))
+			it.Category, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -1902,8 +1911,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateProjectAchieved":
-			out.Values[i] = ec._Mutation_updateProjectAchieved(ctx, field)
+		case "updateProject":
+			out.Values[i] = ec._Mutation_updateProject(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -1934,18 +1943,18 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "userID":
+			out.Values[i] = ec._Project_userID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._Project_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "goal":
-			out.Values[i] = ec._Project_goal(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "achieved":
-			out.Values[i] = ec._Project_achieved(ctx, field, obj)
+		case "category":
+			out.Values[i] = ec._Project_category(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2282,21 +2291,6 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
-	res, err := graphql.UnmarshalInt(v)
-	return res, graphql.WrapErrorWithInputPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
-	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
