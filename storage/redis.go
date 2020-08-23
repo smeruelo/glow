@@ -14,6 +14,23 @@ type redisStore struct {
 }
 
 // NewRedisStore creates a Store that implements the interface for a Redis storage
+// DB schema:
+//
+// |------------------------------|------------|------------------------------------------------------|
+// | Key name                     | Redis type | Fields                                               |
+// |------------------------------|------------|------------------------------------------------------|
+// | users                        | hash       | email, userID                                        |
+// | user:<userID>                | hash       | name, email, pass                                    |
+// | sessions:<userID>            | set        | token                                                |
+// | session:<token>              | hash       | userID                                               |
+// | projects:<userID>            | set        | projectID                                            |
+// | project:<projectID>          | hash       | userID, name, category                               |
+// | achievements:<projectID>     | set        | achievementID                                        |
+// | achievement:<achievementID>  | hash       | userID, projectID, startDateTime, endDateTime        |
+// | goals:<projectID>            | set        | goalID                                               |
+// | goal:<goalID>                | hash       | userID, projectID, type, minutes, startDate, endDate |
+// |------------------------------|------------|------------------------------------------------------|
+//
 func NewRedisStore(conn redis.Conn) Store {
 	return redisStore{conn: conn}
 }
