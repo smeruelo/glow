@@ -151,7 +151,7 @@ func TestDeleteProjectSuccess(t *testing.T) {
 
 	s.On("DeleteProject", id, userID).Return(nil)
 
-	actual, err := r.DeleteProject(ctx, id, userID)
+	actual, err := r.DeleteProject(ctx, id)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -168,7 +168,7 @@ func TestDeleteProjectFail(t *testing.T) {
 
 	s.On("DeleteProject", id, userID).Return(errors.New(""))
 
-	_, err := r.DeleteProject(ctx, id, userID)
+	_, err := r.DeleteProject(ctx, id)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)

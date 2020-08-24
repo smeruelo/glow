@@ -22,7 +22,7 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewPro
 	return &p, r.store.CreateProject(p)
 }
 
-func (r *mutationResolver) DeleteProject(ctx context.Context, id string, userID string) (string, error) {
+func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
 	return id, r.store.DeleteProject(id, "0")
 }
 

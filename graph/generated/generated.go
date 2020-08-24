@@ -55,7 +55,7 @@ type ComplexityRoot struct {
 		CreateAchievement func(childComplexity int, projectID string) int
 		CreateProject     func(childComplexity int, input model.NewProject) int
 		DeleteAchievement func(childComplexity int, id string, projectID string) int
-		DeleteProject     func(childComplexity int, id string, userID string) int
+		DeleteProject     func(childComplexity int, id string) int
 		UpdateAchievement func(childComplexity int, id string, input *model.AchievementData) int
 		UpdateProject     func(childComplexity int, id string, input model.NewProject) int
 	}
@@ -78,7 +78,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error)
-	DeleteProject(ctx context.Context, id string, userID string) (string, error)
+	DeleteProject(ctx context.Context, id string) (string, error)
 	UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error)
 	CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error)
 	UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error)
@@ -188,7 +188,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(string), args["userID"].(string)), true
+		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(string)), true
 
 	case "Mutation.updateAchievement":
 		if e.complexity.Mutation.UpdateAchievement == nil {
@@ -387,7 +387,7 @@ input AchievementData {
 
 type Mutation {
   createProject(input: NewProject!): Project!
-  deleteProject(id: ID!, userID: ID!): ID!
+  deleteProject(id: ID!): ID!
   updateProject(id: ID!, input: NewProject!): Project!
   createAchievement(projectID: ID!): Achievement!
   updateAchievement(id: ID!, input: AchievementData): Achievement!
@@ -467,15 +467,6 @@ func (ec *executionContext) field_Mutation_deleteProject_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["userID"]; ok {
-		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("userID"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["userID"] = arg1
 	return args, nil
 }
 
@@ -845,7 +836,7 @@ func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string), args["userID"].(string))
+		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
