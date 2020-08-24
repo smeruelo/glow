@@ -17,18 +17,18 @@ func TestCreateProjectSuccess(t *testing.T) {
 	ctx := context.Background()
 
 	np := model.NewProject{
-		Name: "Test",
-		Goal: 100,
+		Name:     "Test",
+		Category: "Default",
 	}
 	p := model.Project{
 		ID:       "",
+		UserID:   "0",
 		Name:     "Test",
-		Goal:     100,
-		Achieved: 0,
+		Category: "Default",
 	}
 	expected := &p
 
-	s.On("Create", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+	s.On("CreateProject", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
 		project := args.Get(0).(model.Project)
 		p.ID = project.ID
 	})
@@ -46,11 +46,11 @@ func TestCreateProjectFail(t *testing.T) {
 	ctx := context.Background()
 
 	np := model.NewProject{
-		Name: "Test",
-		Goal: 100,
+		Name:     "Test",
+		Category: "Default",
 	}
 
-	s.On("Create", mock.Anything).Return(errors.New(""))
+	s.On("CreateProject", mock.Anything).Return(errors.New(""))
 
 	_, err := r.CreateProject(ctx, np)
 
@@ -66,13 +66,13 @@ func TestProjectSuccess(t *testing.T) {
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 	p := model.Project{
 		ID:       id,
+		UserID:   "0",
 		Name:     "Test",
-		Goal:     100,
-		Achieved: 20,
+		Category: "Default",
 	}
 	expected := &p
 
-	s.On("Get", id).Return(p, nil)
+	s.On("GetProject", id).Return(p, nil)
 
 	actual, err := r.Project(ctx, id)
 
@@ -88,7 +88,7 @@ func TestProjectFail(t *testing.T) {
 
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 
-	s.On("Get", id).Return(model.Project{}, errors.New(""))
+	s.On("GetProject", id).Return(model.Project{}, errors.New(""))
 
 	_, err := r.Project(ctx, id)
 
@@ -103,19 +103,20 @@ func TestProjectsSuccess(t *testing.T) {
 
 	p1 := model.Project{
 		ID:       "3b054f50-9d3d-4114-bfc4-000000000001",
-		Name:     "Test1",
-		Goal:     100,
-		Achieved: 10,
+		UserID:   "0",
+		Name:     "Test 1",
+		Category: "Default",
 	}
 	p2 := model.Project{
 		ID:       "3b054f50-9d3d-4114-bfc4-000000000002",
-		Name:     "Test2",
-		Goal:     200,
-		Achieved: 20,
+		UserID:   "0",
+		Name:     "Test 2",
+		Category: "Programming",
 	}
+	userID := "0"
 	expected := []*model.Project{&p1, &p2}
 
-	s.On("GetAll").Return([]model.Project{p1, p2}, nil)
+	s.On("GetUserProjects", userID).Return([]model.Project{p1, p2}, nil)
 
 	actual, err := r.Projects(ctx)
 
@@ -124,12 +125,14 @@ func TestProjectsSuccess(t *testing.T) {
 	s.AssertExpectations(t)
 }
 
-func TestProjectsFails(t *testing.T) {
+func TestProjectsFail(t *testing.T) {
 	var s mocks.Store
 	r := &queryResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	s.On("GetAll").Return([]model.Project{}, errors.New(""))
+	userID := "0"
+
+	s.On("GetUserProjects", userID).Return([]model.Project{}, errors.New(""))
 
 	_, err := r.Projects(ctx)
 
@@ -143,11 +146,12 @@ func TestDeleteProjectSuccess(t *testing.T) {
 	ctx := context.Background()
 
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	userID := "0"
 	expected := id
 
-	s.On("Delete", id).Return(nil)
+	s.On("DeleteProject", id, userID).Return(nil)
 
-	actual, err := r.DeleteProject(ctx, id)
+	actual, err := r.DeleteProject(ctx, id, userID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -160,10 +164,11 @@ func TestDeleteProjectFail(t *testing.T) {
 	ctx := context.Background()
 
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	userID := "0"
 
-	s.On("Delete", id).Return(errors.New(""))
+	s.On("DeleteProject", id, userID).Return(errors.New(""))
 
-	_, err := r.DeleteProject(ctx, id)
+	_, err := r.DeleteProject(ctx, id, userID)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)
@@ -175,18 +180,21 @@ func TestUpdateProjectAchievedSuccess(t *testing.T) {
 	ctx := context.Background()
 
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	time := 60
 	p := model.Project{
 		ID:       id,
+		UserID:   "0",
 		Name:     "Test",
-		Goal:     100,
-		Achieved: 80,
+		Category: "Reading",
+	}
+	np := model.NewProject{
+		Name:     "Test",
+		Category: "Reading",
 	}
 	expected := &p
 
-	s.On("UpdateAchieved", id, time).Return(p, nil)
+	s.On("UpdateProject", id, np).Return(p, nil)
 
-	actual, err := r.UpdateProjectAchieved(ctx, id, time)
+	actual, err := r.UpdateProject(ctx, id, np)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -199,12 +207,15 @@ func TestUpdateProjectAchievedFail(t *testing.T) {
 	ctx := context.Background()
 
 	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	time := 60
+	np := model.NewProject{
+		Name:     "Test",
+		Category: "Reading",
+	}
 	var p model.Project
 
-	s.On("UpdateAchieved", id, time).Return(p, errors.New(""))
+	s.On("UpdateProject", id, np).Return(p, errors.New(""))
 
-	_, err := r.UpdateProjectAchieved(ctx, id, time)
+	_, err := r.UpdateProject(ctx, id, np)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)
