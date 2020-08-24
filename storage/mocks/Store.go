@@ -12,13 +12,13 @@ type Store struct {
 	mock.Mock
 }
 
-// CreateProject provides a mock function with given fields: project
-func (_m *Store) CreateProject(project model.Project) error {
-	ret := _m.Called(project)
+// CreateProject provides a mock function with given fields: p
+func (_m *Store) CreateProject(p model.Project) error {
+	ret := _m.Called(p)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(model.Project) error); ok {
-		r0 = rf(project)
+		r0 = rf(p)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -26,13 +26,13 @@ func (_m *Store) CreateProject(project model.Project) error {
 	return r0
 }
 
-// DeleteProject provides a mock function with given fields: id, userID
-func (_m *Store) DeleteProject(id string, userID string) error {
-	ret := _m.Called(id, userID)
+// DeleteProject provides a mock function with given fields: pID, uID
+func (_m *Store) DeleteProject(pID string, uID string) error {
+	ret := _m.Called(pID, uID)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(id, userID)
+		r0 = rf(pID, uID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -40,20 +40,20 @@ func (_m *Store) DeleteProject(id string, userID string) error {
 	return r0
 }
 
-// GetProject provides a mock function with given fields: id
-func (_m *Store) GetProject(id string) (model.Project, error) {
-	ret := _m.Called(id)
+// GetProject provides a mock function with given fields: pID
+func (_m *Store) GetProject(pID string) (model.Project, error) {
+	ret := _m.Called(pID)
 
 	var r0 model.Project
 	if rf, ok := ret.Get(0).(func(string) model.Project); ok {
-		r0 = rf(id)
+		r0 = rf(pID)
 	} else {
 		r0 = ret.Get(0).(model.Project)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(id)
+		r1 = rf(pID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -61,13 +61,13 @@ func (_m *Store) GetProject(id string) (model.Project, error) {
 	return r0, r1
 }
 
-// GetUserProjects provides a mock function with given fields: userID
-func (_m *Store) GetUserProjects(userID string) ([]model.Project, error) {
-	ret := _m.Called(userID)
+// GetUserProjects provides a mock function with given fields: uID
+func (_m *Store) GetUserProjects(uID string) ([]model.Project, error) {
+	ret := _m.Called(uID)
 
 	var r0 []model.Project
 	if rf, ok := ret.Get(0).(func(string) []model.Project); ok {
-		r0 = rf(userID)
+		r0 = rf(uID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]model.Project)
@@ -76,7 +76,7 @@ func (_m *Store) GetUserProjects(userID string) ([]model.Project, error) {
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(userID)
+		r1 = rf(uID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -84,20 +84,20 @@ func (_m *Store) GetUserProjects(userID string) ([]model.Project, error) {
 	return r0, r1
 }
 
-// UpdateProject provides a mock function with given fields: id, np
-func (_m *Store) UpdateProject(id string, np model.NewProject) (model.Project, error) {
-	ret := _m.Called(id, np)
+// UpdateProject provides a mock function with given fields: pID, np
+func (_m *Store) UpdateProject(pID string, np model.NewProject) (model.Project, error) {
+	ret := _m.Called(pID, np)
 
 	var r0 model.Project
 	if rf, ok := ret.Get(0).(func(string, model.NewProject) model.Project); ok {
-		r0 = rf(id, np)
+		r0 = rf(pID, np)
 	} else {
 		r0 = ret.Get(0).(model.Project)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, model.NewProject) error); ok {
-		r1 = rf(id, np)
+		r1 = rf(pID, np)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -63,18 +63,18 @@ func TestProjectSuccess(t *testing.T) {
 	r := &queryResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 	p := model.Project{
-		ID:       id,
+		ID:       pID,
 		UserID:   "0",
 		Name:     "Test",
 		Category: "Default",
 	}
 	expected := &p
 
-	s.On("GetProject", id).Return(p, nil)
+	s.On("GetProject", pID).Return(p, nil)
 
-	actual, err := r.Project(ctx, id)
+	actual, err := r.Project(ctx, pID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -86,11 +86,11 @@ func TestProjectFail(t *testing.T) {
 	r := &queryResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 
-	s.On("GetProject", id).Return(model.Project{}, errors.New(""))
+	s.On("GetProject", pID).Return(model.Project{}, errors.New(""))
 
-	_, err := r.Project(ctx, id)
+	_, err := r.Project(ctx, pID)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)
@@ -113,10 +113,10 @@ func TestProjectsSuccess(t *testing.T) {
 		Name:     "Test 2",
 		Category: "Programming",
 	}
-	userID := "0"
+	uID := "0"
 	expected := []*model.Project{&p1, &p2}
 
-	s.On("GetUserProjects", userID).Return([]model.Project{p1, p2}, nil)
+	s.On("GetUserProjects", uID).Return([]model.Project{p1, p2}, nil)
 
 	actual, err := r.Projects(ctx)
 
@@ -130,9 +130,9 @@ func TestProjectsFail(t *testing.T) {
 	r := &queryResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	userID := "0"
+	uID := "0"
 
-	s.On("GetUserProjects", userID).Return([]model.Project{}, errors.New(""))
+	s.On("GetUserProjects", uID).Return([]model.Project{}, errors.New(""))
 
 	_, err := r.Projects(ctx)
 
@@ -145,13 +145,13 @@ func TestDeleteProjectSuccess(t *testing.T) {
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	userID := "0"
-	expected := id
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	uID := "0"
+	expected := pID
 
-	s.On("DeleteProject", id, userID).Return(nil)
+	s.On("DeleteProject", pID, uID).Return(nil)
 
-	actual, err := r.DeleteProject(ctx, id)
+	actual, err := r.DeleteProject(ctx, pID)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -163,12 +163,12 @@ func TestDeleteProjectFail(t *testing.T) {
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	userID := "0"
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	uID := "0"
 
-	s.On("DeleteProject", id, userID).Return(errors.New(""))
+	s.On("DeleteProject", pID, uID).Return(errors.New(""))
 
-	_, err := r.DeleteProject(ctx, id)
+	_, err := r.DeleteProject(ctx, pID)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)
@@ -179,9 +179,9 @@ func TestUpdateProjectAchievedSuccess(t *testing.T) {
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 	p := model.Project{
-		ID:       id,
+		ID:       pID,
 		UserID:   "0",
 		Name:     "Test",
 		Category: "Reading",
@@ -192,9 +192,9 @@ func TestUpdateProjectAchievedSuccess(t *testing.T) {
 	}
 	expected := &p
 
-	s.On("UpdateProject", id, np).Return(p, nil)
+	s.On("UpdateProject", pID, np).Return(p, nil)
 
-	actual, err := r.UpdateProject(ctx, id, np)
+	actual, err := r.UpdateProject(ctx, pID, np)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expected, actual)
@@ -206,16 +206,16 @@ func TestUpdateProjectAchievedFail(t *testing.T) {
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
 
-	id := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
 	np := model.NewProject{
 		Name:     "Test",
 		Category: "Reading",
 	}
 	var p model.Project
 
-	s.On("UpdateProject", id, np).Return(p, errors.New(""))
+	s.On("UpdateProject", pID, np).Return(p, errors.New(""))
 
-	_, err := r.UpdateProject(ctx, id, np)
+	_, err := r.UpdateProject(ctx, pID, np)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)

@@ -91,9 +91,9 @@ func (s redisStore) CreateProject(p model.Project) error {
 	return nil
 }
 
-func (s redisStore) getProject(id string) (model.Project, error) {
+func (s redisStore) getProject(pID string) (model.Project, error) {
 	var p model.Project
-	key := fmt.Sprintf("%s:%s", sProject, id)
+	key := fmt.Sprintf("%s:%s", sProject, pID)
 	if err := s.errIfDoesntExist(key); err != nil {
 		return p, err
 	}
@@ -104,7 +104,7 @@ func (s redisStore) getProject(id string) (model.Project, error) {
 		return p, err
 	}
 
-	p.ID = id
+	p.ID = pID
 	p.UserID = fields[sUserID]
 	p.Name = fields[sName]
 	p.Category = fields[sCategory]
@@ -112,12 +112,12 @@ func (s redisStore) getProject(id string) (model.Project, error) {
 	return p, nil
 }
 
-func (s redisStore) GetProject(id string) (model.Project, error) {
-	return s.getProject(id)
+func (s redisStore) GetProject(pID string) (model.Project, error) {
+	return s.getProject(pID)
 }
 
-func (s redisStore) GetUserProjects(userID string) ([]model.Project, error) {
-	key := fmt.Sprintf("%s:%s", sProjects, userID)
+func (s redisStore) GetUserProjects(uID string) ([]model.Project, error) {
+	key := fmt.Sprintf("%s:%s", sProjects, uID)
 	projectIDs, err := redis.Strings(s.conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Printf("Database error: %s", err)
@@ -125,8 +125,8 @@ func (s redisStore) GetUserProjects(userID string) ([]model.Project, error) {
 	}
 
 	ps := make([]model.Project, len(projectIDs))
-	for i, id := range projectIDs {
-		p, err := s.getProject(id)
+	for i, pID := range projectIDs {
+		p, err := s.getProject(pID)
 		if err != nil {
 			return ps, err
 		}
@@ -135,8 +135,8 @@ func (s redisStore) GetUserProjects(userID string) ([]model.Project, error) {
 	return ps, nil
 }
 
-func (s redisStore) DeleteProject(id, userID string) error {
-	key := fmt.Sprintf("%s:%s", sProject, id)
+func (s redisStore) DeleteProject(pID, uID string) error {
+	key := fmt.Sprintf("%s:%s", sProject, pID)
 	if err := s.errIfDoesntExist(key); err != nil {
 		return err
 	}
@@ -146,8 +146,8 @@ func (s redisStore) DeleteProject(id, userID string) error {
 		return err
 	}
 
-	key = fmt.Sprintf("%s:%s", sProjects, userID)
-	if _, err := redis.Int64(s.conn.Do("SREM", key, id)); err != nil {
+	key = fmt.Sprintf("%s:%s", sProjects, uID)
+	if _, err := redis.Int64(s.conn.Do("SREM", key, pID)); err != nil {
 		log.Printf("Database error: %s", err)
 		return err
 	}
@@ -155,13 +155,13 @@ func (s redisStore) DeleteProject(id, userID string) error {
 	return nil
 }
 
-func (s redisStore) UpdateProject(id string, np model.NewProject) (model.Project, error) {
-	p, err := s.getProject(id)
+func (s redisStore) UpdateProject(pID string, np model.NewProject) (model.Project, error) {
+	p, err := s.getProject(pID)
 	if err != nil {
 		return p, err
 	}
 
-	key := fmt.Sprintf("%s:%s", sProject, id)
+	key := fmt.Sprintf("%s:%s", sProject, pID)
 	_, err = redis.Int64(s.conn.Do("HSET", key, sName, np.Name, sCategory, np.Category))
 	if err != nil {
 		log.Printf("Database error: %s", err)
