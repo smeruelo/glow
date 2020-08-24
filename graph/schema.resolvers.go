@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/smeruelo/glow/graph/generated"
@@ -30,6 +31,18 @@ func (r *mutationResolver) UpdateProject(ctx context.Context, id string, input m
 	return &p, err
 }
 
+func (r *mutationResolver) CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) DeleteAchievement(ctx context.Context, id string, projectID string) (string, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
 	all, err := r.store.GetUserProjects("0")
 	if err != nil {
@@ -45,6 +58,18 @@ func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) 
 func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project, error) {
 	p, err := r.store.GetProject(id)
 	return &p, err
+}
+
+func (r *queryResolver) Achivement(ctx context.Context, id string) (*model.Achievement, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) ProjectAchievements(ctx context.Context) ([]*model.Achievement, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) UserAchievements(ctx context.Context) ([]*model.Achievement, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
 // Mutation returns generated.MutationResolver implementation.

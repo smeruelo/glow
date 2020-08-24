@@ -2,6 +2,20 @@
 
 package model
 
+type Achievement struct {
+	ID        string `json:"id"`
+	UserID    string `json:"userID"`
+	ProjectID string `json:"projectID"`
+	Start     int    `json:"start"`
+	End       int    `json:"end"`
+}
+
+type AchievementData struct {
+	ProjectID string `json:"projectID"`
+	Start     int    `json:"start"`
+	End       int    `json:"end"`
+}
+
 type NewProject struct {
 	Name     string `json:"name"`
 	Category string `json:"category"`

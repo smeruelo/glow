@@ -5,9 +5,20 @@ type Project {
   category: String!
 }
 
+type Achievement {
+  id: ID!
+  userID: ID!
+  projectID: ID!
+  start: Int!
+  end: Int!
+}
+
 type Query {
   projects: [Project!]!
   project(id: ID!): Project
+  achivement(id: ID!): Achievement
+  projectAchievements: [Achievement!]!
+  userAchievements: [Achievement!]!
 }
 
 input NewProject {
@@ -15,8 +26,17 @@ input NewProject {
   category: String!
 }
 
+input AchievementData {
+  projectID: ID!
+  start: Int!
+  end: Int!
+}
+
 type Mutation {
   createProject(input: NewProject!): Project!
   deleteProject(id: ID!, userID: ID!): ID!
   updateProject(id: ID!, input: NewProject!): Project!
+  createAchievement(projectID: ID!): Achievement!
+  updateAchievement(id: ID!, input: AchievementData): Achievement!
+  deleteAchievement(id: ID!, projectID: ID!): ID!
 }

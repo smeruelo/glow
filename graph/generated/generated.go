@@ -43,10 +43,21 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Achievement struct {
+		End       func(childComplexity int) int
+		ID        func(childComplexity int) int
+		ProjectID func(childComplexity int) int
+		Start     func(childComplexity int) int
+		UserID    func(childComplexity int) int
+	}
+
 	Mutation struct {
-		CreateProject func(childComplexity int, input model.NewProject) int
-		DeleteProject func(childComplexity int, id string, userID string) int
-		UpdateProject func(childComplexity int, id string, input model.NewProject) int
+		CreateAchievement func(childComplexity int, projectID string) int
+		CreateProject     func(childComplexity int, input model.NewProject) int
+		DeleteAchievement func(childComplexity int, id string, projectID string) int
+		DeleteProject     func(childComplexity int, id string, userID string) int
+		UpdateAchievement func(childComplexity int, id string, input *model.AchievementData) int
+		UpdateProject     func(childComplexity int, id string, input model.NewProject) int
 	}
 
 	Project struct {
@@ -57,8 +68,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Project  func(childComplexity int, id string) int
-		Projects func(childComplexity int) int
+		Achivement          func(childComplexity int, id string) int
+		Project             func(childComplexity int, id string) int
+		ProjectAchievements func(childComplexity int) int
+		Projects            func(childComplexity int) int
+		UserAchievements    func(childComplexity int) int
 	}
 }
 
@@ -66,10 +80,16 @@ type MutationResolver interface {
 	CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error)
 	DeleteProject(ctx context.Context, id string, userID string) (string, error)
 	UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error)
+	CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error)
+	UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error)
+	DeleteAchievement(ctx context.Context, id string, projectID string) (string, error)
 }
 type QueryResolver interface {
 	Projects(ctx context.Context) ([]*model.Project, error)
 	Project(ctx context.Context, id string) (*model.Project, error)
+	Achivement(ctx context.Context, id string) (*model.Achievement, error)
+	ProjectAchievements(ctx context.Context) ([]*model.Achievement, error)
+	UserAchievements(ctx context.Context) ([]*model.Achievement, error)
 }
 
 type executableSchema struct {
@@ -87,6 +107,53 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "Achievement.end":
+		if e.complexity.Achievement.End == nil {
+			break
+		}
+
+		return e.complexity.Achievement.End(childComplexity), true
+
+	case "Achievement.id":
+		if e.complexity.Achievement.ID == nil {
+			break
+		}
+
+		return e.complexity.Achievement.ID(childComplexity), true
+
+	case "Achievement.projectID":
+		if e.complexity.Achievement.ProjectID == nil {
+			break
+		}
+
+		return e.complexity.Achievement.ProjectID(childComplexity), true
+
+	case "Achievement.start":
+		if e.complexity.Achievement.Start == nil {
+			break
+		}
+
+		return e.complexity.Achievement.Start(childComplexity), true
+
+	case "Achievement.userID":
+		if e.complexity.Achievement.UserID == nil {
+			break
+		}
+
+		return e.complexity.Achievement.UserID(childComplexity), true
+
+	case "Mutation.createAchievement":
+		if e.complexity.Mutation.CreateAchievement == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createAchievement_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateAchievement(childComplexity, args["projectID"].(string)), true
+
 	case "Mutation.createProject":
 		if e.complexity.Mutation.CreateProject == nil {
 			break
@@ -99,6 +166,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateProject(childComplexity, args["input"].(model.NewProject)), true
 
+	case "Mutation.deleteAchievement":
+		if e.complexity.Mutation.DeleteAchievement == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteAchievement_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAchievement(childComplexity, args["id"].(string), args["projectID"].(string)), true
+
 	case "Mutation.deleteProject":
 		if e.complexity.Mutation.DeleteProject == nil {
 			break
@@ -110,6 +189,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteProject(childComplexity, args["id"].(string), args["userID"].(string)), true
+
+	case "Mutation.updateAchievement":
+		if e.complexity.Mutation.UpdateAchievement == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAchievement_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAchievement(childComplexity, args["id"].(string), args["input"].(*model.AchievementData)), true
 
 	case "Mutation.updateProject":
 		if e.complexity.Mutation.UpdateProject == nil {
@@ -151,6 +242,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Project.UserID(childComplexity), true
 
+	case "Query.achivement":
+		if e.complexity.Query.Achivement == nil {
+			break
+		}
+
+		args, err := ec.field_Query_achivement_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Achivement(childComplexity, args["id"].(string)), true
+
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
 			break
@@ -163,12 +266,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Project(childComplexity, args["id"].(string)), true
 
+	case "Query.projectAchievements":
+		if e.complexity.Query.ProjectAchievements == nil {
+			break
+		}
+
+		return e.complexity.Query.ProjectAchievements(childComplexity), true
+
 	case "Query.projects":
 		if e.complexity.Query.Projects == nil {
 			break
 		}
 
 		return e.complexity.Query.Projects(childComplexity), true
+
+	case "Query.userAchievements":
+		if e.complexity.Query.UserAchievements == nil {
+			break
+		}
+
+		return e.complexity.Query.UserAchievements(childComplexity), true
 
 	}
 	return 0, false
@@ -241,9 +358,20 @@ var sources = []*ast.Source{
   category: String!
 }
 
+type Achievement {
+  id: ID!
+  userID: ID!
+  projectID: ID!
+  start: Int!
+  end: Int!
+}
+
 type Query {
   projects: [Project!]!
   project(id: ID!): Project
+  achivement(id: ID!): Achievement
+  projectAchievements: [Achievement!]!
+  userAchievements: [Achievement!]!
 }
 
 input NewProject {
@@ -251,10 +379,19 @@ input NewProject {
   category: String!
 }
 
+input AchievementData {
+  projectID: ID!
+  start: Int!
+  end: Int!
+}
+
 type Mutation {
   createProject(input: NewProject!): Project!
   deleteProject(id: ID!, userID: ID!): ID!
   updateProject(id: ID!, input: NewProject!): Project!
+  createAchievement(projectID: ID!): Achievement!
+  updateAchievement(id: ID!, input: AchievementData): Achievement!
+  deleteAchievement(id: ID!, projectID: ID!): ID!
 }
 `, BuiltIn: false},
 }
@@ -263,6 +400,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_createAchievement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["projectID"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("projectID"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["projectID"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -276,6 +428,30 @@ func (ec *executionContext) field_Mutation_createProject_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteAchievement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["projectID"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("projectID"))
+		arg1, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["projectID"] = arg1
 	return args, nil
 }
 
@@ -300,6 +476,30 @@ func (ec *executionContext) field_Mutation_deleteProject_args(ctx context.Contex
 		}
 	}
 	args["userID"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAchievement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 *model.AchievementData
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("input"))
+		arg1, err = ec.unmarshalOAchievementData2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -339,6 +539,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_achivement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -394,6 +609,176 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Achievement_id(ctx context.Context, field graphql.CollectedField, obj *model.Achievement) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Achievement",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Achievement_userID(ctx context.Context, field graphql.CollectedField, obj *model.Achievement) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Achievement",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UserID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Achievement_projectID(ctx context.Context, field graphql.CollectedField, obj *model.Achievement) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Achievement",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ProjectID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Achievement_start(ctx context.Context, field graphql.CollectedField, obj *model.Achievement) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Achievement",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Start, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Achievement_end(ctx context.Context, field graphql.CollectedField, obj *model.Achievement) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Achievement",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.End, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Mutation_createProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
@@ -516,6 +901,129 @@ func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field g
 	res := resTmp.(*model.Project)
 	fc.Result = res
 	return ec.marshalNProject2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_createAchievement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_createAchievement_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateAchievement(rctx, args["projectID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Achievement)
+	fc.Result = res
+	return ec.marshalNAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateAchievement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateAchievement_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateAchievement(rctx, args["id"].(string), args["input"].(*model.AchievementData))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Achievement)
+	fc.Result = res
+	return ec.marshalNAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteAchievement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteAchievement_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAchievement(rctx, args["id"].(string), args["projectID"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_id(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
@@ -724,6 +1232,112 @@ func (ec *executionContext) _Query_project(ctx context.Context, field graphql.Co
 	res := resTmp.(*model.Project)
 	fc.Result = res
 	return ec.marshalOProject2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_achivement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_achivement_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Achivement(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Achievement)
+	fc.Result = res
+	return ec.marshalOAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_projectAchievements(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().ProjectAchievements(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Achievement)
+	fc.Result = res
+	return ec.marshalNAchievement2ᚕᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_userAchievements(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().UserAchievements(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.Achievement)
+	fc.Result = res
+	return ec.marshalNAchievement2ᚕᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1850,6 +2464,42 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAchievementData(ctx context.Context, obj interface{}) (model.AchievementData, error) {
+	var it model.AchievementData
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "projectID":
+			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("projectID"))
+			it.ProjectID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "start":
+			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("start"))
+			it.Start, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "end":
+			var err error
+
+			ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("end"))
+			it.End, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNewProject(ctx context.Context, obj interface{}) (model.NewProject, error) {
 	var it model.NewProject
 	var asMap = obj.(map[string]interface{})
@@ -1886,6 +2536,53 @@ func (ec *executionContext) unmarshalInputNewProject(ctx context.Context, obj in
 
 // region    **************************** object.gotpl ****************************
 
+var achievementImplementors = []string{"Achievement"}
+
+func (ec *executionContext) _Achievement(ctx context.Context, sel ast.SelectionSet, obj *model.Achievement) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, achievementImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Achievement")
+		case "id":
+			out.Values[i] = ec._Achievement_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "userID":
+			out.Values[i] = ec._Achievement_userID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "projectID":
+			out.Values[i] = ec._Achievement_projectID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "start":
+			out.Values[i] = ec._Achievement_start(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "end":
+			out.Values[i] = ec._Achievement_end(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -1913,6 +2610,21 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "updateProject":
 			out.Values[i] = ec._Mutation_updateProject(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "createAchievement":
+			out.Values[i] = ec._Mutation_createAchievement(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateAchievement":
+			out.Values[i] = ec._Mutation_updateAchievement(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteAchievement":
+			out.Values[i] = ec._Mutation_deleteAchievement(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2007,6 +2719,45 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_project(ctx, field)
+				return res
+			})
+		case "achivement":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_achivement(ctx, field)
+				return res
+			})
+		case "projectAchievements":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_projectAchievements(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "userAchievements":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userAchievements(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		case "__type":
@@ -2269,6 +3020,57 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) marshalNAchievement2githubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx context.Context, sel ast.SelectionSet, v model.Achievement) graphql.Marshaler {
+	return ec._Achievement(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNAchievement2ᚕᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Achievement) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx context.Context, sel ast.SelectionSet, v *model.Achievement) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Achievement(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.WrapErrorWithInputPath(ctx, err)
@@ -2291,6 +3093,21 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface
 
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
+	res, err := graphql.UnmarshalInt(v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
+	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2597,6 +3414,21 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalOAchievement2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievement(ctx context.Context, sel ast.SelectionSet, v *model.Achievement) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Achievement(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAchievementData2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx context.Context, v interface{}) (*model.AchievementData, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAchievementData(ctx, v)
+	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
