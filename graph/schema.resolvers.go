@@ -5,7 +5,7 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/smeruelo/glow/graph/generated"
@@ -32,15 +32,23 @@ func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string
 }
 
 func (r *mutationResolver) CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error) {
-	panic(fmt.Errorf("not implemented"))
+	a := model.Achievement{
+		ID:        uuid.New().String(),
+		UserID:    "0",
+		ProjectID: projectID,
+		Start:     time.Now().Unix(),
+		End:       0,
+	}
+	return &a, r.store.CreateAchievement(a)
 }
 
 func (r *mutationResolver) UpdateAchievement(ctx context.Context, id string, input model.AchievementData) (*model.Achievement, error) {
-	panic(fmt.Errorf("not implemented"))
+	a, err := r.store.UpdateAchievement(id, input)
+	return &a, err
 }
 
 func (r *mutationResolver) DeleteAchievement(ctx context.Context, id string, projectID string) (string, error) {
-	panic(fmt.Errorf("not implemented"))
+	return id, r.store.DeleteProject(id, pID)
 }
 
 func (r *queryResolver) Projects(ctx context.Context) ([]*model.Project, error) {
@@ -61,15 +69,41 @@ func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project,
 }
 
 func (r *queryResolver) Achievement(ctx context.Context, id string) (*model.Achievement, error) {
-	panic(fmt.Errorf("not implemented"))
+	a, err := r.store.GetAchievement(id)
+	return &a, err
 }
 
 func (r *queryResolver) ProjectAchievements(ctx context.Context, projectID string) ([]*model.Achievement, error) {
-	panic(fmt.Errorf("not implemented"))
+	all, err := r.store.GetProjectAchievements(projectID)
+	if err != nil {
+		return nil, err
+	}
+	as := make([]*model.Achievement, len(all))
+	for i := range all {
+		as[i] = &all[i]
+	}
+	return as, nil
 }
 
 func (r *queryResolver) UserAchievements(ctx context.Context) ([]*model.Achievement, error) {
-	panic(fmt.Errorf("not implemented"))
+	uID := "0"
+	projects, err := r.store.GetUserProjects(uID)
+	if err != nil {
+		return nil, err
+	}
+
+	as := []*model.Achievement{}
+	for p := range projects {
+		pAs, err := r.store.GetProjectAchievements(p.ID)
+		if err != nil {
+			return nil, err
+		}
+		for a := range pAs {
+			append(as, &a)
+		}
+	}
+
+	return as, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.
