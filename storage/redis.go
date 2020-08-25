@@ -135,6 +135,24 @@ func (s redisStore) GetUserProjects(uID string) ([]model.Project, error) {
 	return ps, nil
 }
 
+func (s redisStore) UpdateProject(pID string, np model.NewProject) (model.Project, error) {
+	p, err := s.getProject(pID)
+	if err != nil {
+		return p, err
+	}
+
+	key := fmt.Sprintf("%s:%s", sProject, pID)
+	_, err = redis.Int64(s.conn.Do("HSET", key, sName, np.Name, sCategory, np.Category))
+	if err != nil {
+		log.Printf("Database error: %s", err)
+		return p, err
+	}
+
+	p.Name = np.Name
+	p.Category = np.Category
+	return p, nil
+}
+
 func (s redisStore) DeleteProject(pID, uID string) error {
 	key := fmt.Sprintf("%s:%s", sProject, pID)
 	if err := s.errIfDoesntExist(key); err != nil {
@@ -153,22 +171,4 @@ func (s redisStore) DeleteProject(pID, uID string) error {
 	}
 
 	return nil
-}
-
-func (s redisStore) UpdateProject(pID string, np model.NewProject) (model.Project, error) {
-	p, err := s.getProject(pID)
-	if err != nil {
-		return p, err
-	}
-
-	key := fmt.Sprintf("%s:%s", sProject, pID)
-	_, err = redis.Int64(s.conn.Do("HSET", key, sName, np.Name, sCategory, np.Category))
-	if err != nil {
-		log.Printf("Database error: %s", err)
-		return p, err
-	}
-
-	p.Name = np.Name
-	p.Category = np.Category
-	return p, nil
 }

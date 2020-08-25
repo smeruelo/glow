@@ -78,8 +78,8 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateProject(ctx context.Context, input model.NewProject) (*model.Project, error)
-	DeleteProject(ctx context.Context, id string) (string, error)
 	UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error)
+	DeleteProject(ctx context.Context, id string) (string, error)
 	CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error)
 	UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error)
 	DeleteAchievement(ctx context.Context, id string, projectID string) (string, error)
@@ -392,8 +392,8 @@ input AchievementData {
 
 type Mutation {
   createProject(input: NewProject!): Project!
-  deleteProject(id: ID!): ID!
   updateProject(id: ID!, input: NewProject!): Project!
+  deleteProject(id: ID!): ID!
   createAchievement(projectID: ID!): Achievement!
   updateAchievement(id: ID!, input: AchievementData): Achievement!
   deleteAchievement(id: ID!, projectID: ID!): ID!
@@ -832,47 +832,6 @@ func (ec *executionContext) _Mutation_createProject(ctx context.Context, field g
 	return ec.marshalNProject2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteProject_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -912,6 +871,47 @@ func (ec *executionContext) _Mutation_updateProject(ctx context.Context, field g
 	res := resTmp.(*model.Project)
 	fc.Result = res
 	return ec.marshalNProject2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteProject_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteProject(rctx, args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createAchievement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2621,13 +2621,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "deleteProject":
-			out.Values[i] = ec._Mutation_deleteProject(ctx, field)
+		case "updateProject":
+			out.Values[i] = ec._Mutation_updateProject(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "updateProject":
-			out.Values[i] = ec._Mutation_updateProject(ctx, field)
+		case "deleteProject":
+			out.Values[i] = ec._Mutation_deleteProject(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}

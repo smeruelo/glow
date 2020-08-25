@@ -22,13 +22,13 @@ func (r *mutationResolver) CreateProject(ctx context.Context, input model.NewPro
 	return &p, r.store.CreateProject(p)
 }
 
-func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
-	return id, r.store.DeleteProject(id, "0")
-}
-
 func (r *mutationResolver) UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error) {
 	p, err := r.store.UpdateProject(id, input)
 	return &p, err
+}
+
+func (r *mutationResolver) DeleteProject(ctx context.Context, id string) (string, error) {
+	return id, r.store.DeleteProject(id, "0")
 }
 
 func (r *mutationResolver) CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error) {

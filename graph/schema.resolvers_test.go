@@ -140,40 +140,6 @@ func TestProjectsFail(t *testing.T) {
 	s.AssertExpectations(t)
 }
 
-func TestDeleteProjectSuccess(t *testing.T) {
-	var s mocks.Store
-	r := &mutationResolver{Resolver: NewResolver(&s)}
-	ctx := context.Background()
-
-	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	uID := "0"
-	expected := pID
-
-	s.On("DeleteProject", pID, uID).Return(nil)
-
-	actual, err := r.DeleteProject(ctx, pID)
-
-	assert.NoError(t, err)
-	assert.Equal(t, expected, actual)
-	s.AssertExpectations(t)
-}
-
-func TestDeleteProjectFail(t *testing.T) {
-	var s mocks.Store
-	r := &mutationResolver{Resolver: NewResolver(&s)}
-	ctx := context.Background()
-
-	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
-	uID := "0"
-
-	s.On("DeleteProject", pID, uID).Return(errors.New(""))
-
-	_, err := r.DeleteProject(ctx, pID)
-
-	assert.Error(t, err)
-	s.AssertExpectations(t)
-}
-
 func TestUpdateProjectSuccess(t *testing.T) {
 	var s mocks.Store
 	r := &mutationResolver{Resolver: NewResolver(&s)}
@@ -216,6 +182,40 @@ func TestUpdateProjectFail(t *testing.T) {
 	s.On("UpdateProject", pID, np).Return(p, errors.New(""))
 
 	_, err := r.UpdateProject(ctx, pID, np)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestDeleteProjectSuccess(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	uID := "0"
+	expected := pID
+
+	s.On("DeleteProject", pID, uID).Return(nil)
+
+	actual, err := r.DeleteProject(ctx, pID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestDeleteProjectFail(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	uID := "0"
+
+	s.On("DeleteProject", pID, uID).Return(errors.New(""))
+
+	_, err := r.DeleteProject(ctx, pID)
 
 	assert.Error(t, err)
 	s.AssertExpectations(t)

@@ -9,8 +9,8 @@ type Store interface {
 	CreateProject(p model.Project) error
 	GetProject(pID string) (model.Project, error)
 	GetUserProjects(uID string) ([]model.Project, error)
-	DeleteProject(pID, uID string) error
 	UpdateProject(pID string, np model.NewProject) (model.Project, error)
+	DeleteProject(pID, uID string) error
 
 	CreateAchievement(a model.Achievement) error
 	GetAchievement(aID string) (model.Achievement, error)
