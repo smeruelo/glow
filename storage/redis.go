@@ -60,17 +60,24 @@ func (s redisStore) errIfDoesntExist(key string) error {
 	return nil
 }
 
-func (s redisStore) CreateProject(p model.Project) error {
-	// Check if project exists
-	key := fmt.Sprintf("%s:%s", sProject, p.ID)
+func (s redisStore) errIfExists(key string) error {
 	n, err := redis.Int64(s.conn.Do("EXISTS", key))
 	if err != nil {
 		log.Printf("Database error: %s", err)
 		return err
 	}
 	if n == 1 {
-		log.Printf("Project %s already exists", p.ID)
-		return fmt.Errorf("Project %s already exists", p.ID)
+		log.Printf("Key %s does already exist", key)
+		return fmt.Errorf("Key %s does already exist", key)
+	}
+	return nil
+}
+
+func (s redisStore) CreateProject(p model.Project) error {
+	// Check if project exists
+	key := fmt.Sprintf("%s:%s", sProject, p.ID)
+	if err := errIfExists(key); err != nil {
+		return err
 	}
 
 	// Create project
