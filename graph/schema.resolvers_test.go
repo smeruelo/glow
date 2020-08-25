@@ -174,7 +174,7 @@ func TestDeleteProjectFail(t *testing.T) {
 	s.AssertExpectations(t)
 }
 
-func TestUpdateProjectAchievedSuccess(t *testing.T) {
+func TestUpdateProjectSuccess(t *testing.T) {
 	var s mocks.Store
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
@@ -201,7 +201,7 @@ func TestUpdateProjectAchievedSuccess(t *testing.T) {
 	s.AssertExpectations(t)
 }
 
-func TestUpdateProjectAchievedFail(t *testing.T) {
+func TestUpdateProjectFail(t *testing.T) {
 	var s mocks.Store
 	r := &mutationResolver{Resolver: NewResolver(&s)}
 	ctx := context.Background()
