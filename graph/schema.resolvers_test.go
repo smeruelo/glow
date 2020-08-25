@@ -220,3 +220,259 @@ func TestUpdateProjectFail(t *testing.T) {
 	assert.Error(t, err)
 	s.AssertExpectations(t)
 }
+
+func TestCreateAchievementSuccess(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	a := model.Achievement{
+		ID:        "",
+		UserID:    "0",
+		ProjectID: pID,
+		Start:     1598341158,
+		End:       0,
+	}
+	expected := &a
+
+	s.On("CreateAchievement", mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		ach := args.Get(0).(model.Achievement)
+		a.ID = ach.ID
+	})
+
+	actual, err := r.CreateAchievement(pID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestCreateAchievementFail(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+
+	s.On("CreateAchievement", mock.Anything).Return(errors.New(""))
+
+	err := r.CreateAchievement(pID)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestAchievementSuccess(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	a := model.Achievement{
+		ID:        aID,
+		UserID:    "0",
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b7df83",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+	expected := &a
+
+	s.On("GetAchievement", aID).Return(a, nil)
+
+	actual, err := r.Query().Achievement(ctx, aID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestAchievementFail(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+
+	s.On("GetAchievement", aID).Return(a, nil)
+
+	_, err := r.Query().Achievement(ctx, aID)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestProjectAchievementsSuccess(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "b1265627-d9f2-4a0b-b60d-322273b7df83"
+	a1 := model.Achievement{
+		ID:        "3b054f50-9d3d-4114-bfc4-395f70a00001",
+		UserID:    "0",
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b00001",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+	a2 := model.Achievement{
+		ID:        "3b054f50-9d3d-4114-bfc4-395f70a00002",
+		UserID:    "0",
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b00002",
+		Start:     1598342900,
+		End:       1598346500,
+	}
+	expected := []*model.Achievement{&a1, &a2}
+
+	s.On("GetProjectAchievements", pID).Return([]model.Achievement{&a1, &a2}, nil)
+
+	actual, err := r.Query().ProjectAchievements(ctx, pID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestProjectAchievementsFail(t *testing.T) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	pID := "b1265627-d9f2-4a0b-b60d-322273b7df83"
+
+	s.On("GetProjectAchievements", pID).Return([]model.Achievement{}, errors.New(""))
+
+	_, err := r.Query().ProjectAchievements(ctx, pID)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestUserAchievementsSucces(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	uID := "0"
+	a1 := model.Achievement{
+		ID:        "3b054f50-9d3d-4114-bfc4-395f70a00001",
+		UserID:    uID,
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b00001",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+	a2 := model.Achievement{
+		ID:        "3b054f50-9d3d-4114-bfc4-395f70a00002",
+		UserID:    uID,
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b00002",
+		Start:     1598342900,
+		End:       1598346500,
+	}
+	expected := []*model.Achievement{&a1, &a2}
+
+	s.On("GetUserAchievements", uID).Return([]model.Achievement{&a1, &a2}, nil)
+
+	actual, err := r.Query().UserAchievements(ctx, uID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestUserAchievementsFail(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	uID := "0"
+
+	s.On("GetUserAchievements", uID).Return([]model.Achievement{}, errors.New(""))
+
+	_, err := r.Query().UserAchievements(ctx, uID)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestUpdateAchievementSuccess(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	a := model.Achievement{
+		ID:        aID,
+		UserID:    "0",
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b7df83",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+	ad := model.AchievementData{
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b7df83",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+	expected := &a
+
+	s.On("UpdateAchievement", aID, ad).Return(a, nil)
+
+	actual, err := r.Mutation().UpdateAchievement(ctx, aID, ad)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestUpdateAchievementFail(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	ad := model.AchievementData{
+		ProjectID: "b1265627-d9f2-4a0b-b60d-322273b7df83",
+		Start:     1598341158,
+		End:       1598342861,
+	}
+
+	s.On("UpdateAchievement", aID, ad).Return(model.Achievement{}, errors.New(""))
+
+	_, err := r.Mutation().UpdateAchievement(ctx, aID, ad)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
+
+func TestDeleteAchievementSuccess(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "b1265627-d9f2-4a0b-b60d-322273b7df83"
+	expected := aID
+
+	s.On("DeleteAchievement", aID, pID).Return(nil)
+
+	actual, err := r.Mutation().DeleteAchievement(ctx, aID, pID)
+
+	assert.NoError(t, err)
+	assert.Equal(t, expected, actual)
+	s.AssertExpectations(t)
+}
+
+func TestDeleteAchievementFail(t *testingT) {
+	var s mocks.Store
+	r := &mutationResolver{Resolver: NewResolver(&s)}
+	ctx := context.Background()
+
+	aID := "3b054f50-9d3d-4114-bfc4-395f70a59d26"
+	pID := "b1265627-d9f2-4a0b-b60d-322273b7df83"
+
+	s.On("DeleteAchievement", aID, pID).Return(errors.New(""))
+
+	_, err := r.Mutation().DeleteAchievement(ctx, aID, pID)
+
+	assert.Error(t, err)
+	s.AssertExpectations(t)
+}
