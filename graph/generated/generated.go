@@ -70,7 +70,7 @@ type ComplexityRoot struct {
 	Query struct {
 		Achievement         func(childComplexity int, id string) int
 		Project             func(childComplexity int, id string) int
-		ProjectAchievements func(childComplexity int) int
+		ProjectAchievements func(childComplexity int, projectID string) int
 		Projects            func(childComplexity int) int
 		UserAchievements    func(childComplexity int) int
 	}
@@ -88,7 +88,7 @@ type QueryResolver interface {
 	Projects(ctx context.Context) ([]*model.Project, error)
 	Project(ctx context.Context, id string) (*model.Project, error)
 	Achievement(ctx context.Context, id string) (*model.Achievement, error)
-	ProjectAchievements(ctx context.Context) ([]*model.Achievement, error)
+	ProjectAchievements(ctx context.Context, projectID string) ([]*model.Achievement, error)
 	UserAchievements(ctx context.Context) ([]*model.Achievement, error)
 }
 
@@ -271,7 +271,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Query.ProjectAchievements(childComplexity), true
+		args, err := ec.field_Query_projectAchievements_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ProjectAchievements(childComplexity, args["projectID"].(string)), true
 
 	case "Query.projects":
 		if e.complexity.Query.Projects == nil {
@@ -370,7 +375,7 @@ type Query {
   projects: [Project!]!
   project(id: ID!): Project
   achievement(id: ID!): Achievement
-  projectAchievements: [Achievement!]!
+  projectAchievements(projectID: ID!): [Achievement!]!
   userAchievements: [Achievement!]!
 }
 
@@ -545,6 +550,21 @@ func (ec *executionContext) field_Query_achievement_args(ctx context.Context, ra
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_projectAchievements_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["projectID"]; ok {
+		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("projectID"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["projectID"] = arg0
 	return args, nil
 }
 
@@ -1278,9 +1298,16 @@ func (ec *executionContext) _Query_projectAchievements(ctx context.Context, fiel
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_projectAchievements_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().ProjectAchievements(rctx)
+		return ec.resolvers.Query().ProjectAchievements(rctx, args["projectID"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

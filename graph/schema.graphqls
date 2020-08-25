@@ -17,7 +17,7 @@ type Query {
   projects: [Project!]!
   project(id: ID!): Project
   achievement(id: ID!): Achievement
-  projectAchievements: [Achievement!]!
+  projectAchievements(projectID: ID!): [Achievement!]!
   userAchievements: [Achievement!]!
 }
 
