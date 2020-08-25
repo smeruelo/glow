@@ -68,7 +68,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Achivement          func(childComplexity int, id string) int
+		Achievement         func(childComplexity int, id string) int
 		Project             func(childComplexity int, id string) int
 		ProjectAchievements func(childComplexity int) int
 		Projects            func(childComplexity int) int
@@ -87,7 +87,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Projects(ctx context.Context) ([]*model.Project, error)
 	Project(ctx context.Context, id string) (*model.Project, error)
-	Achivement(ctx context.Context, id string) (*model.Achievement, error)
+	Achievement(ctx context.Context, id string) (*model.Achievement, error)
 	ProjectAchievements(ctx context.Context) ([]*model.Achievement, error)
 	UserAchievements(ctx context.Context) ([]*model.Achievement, error)
 }
@@ -242,17 +242,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Project.UserID(childComplexity), true
 
-	case "Query.achivement":
-		if e.complexity.Query.Achivement == nil {
+	case "Query.achievement":
+		if e.complexity.Query.Achievement == nil {
 			break
 		}
 
-		args, err := ec.field_Query_achivement_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_achievement_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Query.Achivement(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Achievement(childComplexity, args["id"].(string)), true
 
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
@@ -369,7 +369,7 @@ type Achievement {
 type Query {
   projects: [Project!]!
   project(id: ID!): Project
-  achivement(id: ID!): Achievement
+  achievement(id: ID!): Achievement
   projectAchievements: [Achievement!]!
   userAchievements: [Achievement!]!
 }
@@ -533,7 +533,7 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_achivement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Query_achievement_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -1225,7 +1225,7 @@ func (ec *executionContext) _Query_project(ctx context.Context, field graphql.Co
 	return ec.marshalOProject2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_achivement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_achievement(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1241,7 +1241,7 @@ func (ec *executionContext) _Query_achivement(ctx context.Context, field graphql
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_achivement_args(ctx, rawArgs)
+	args, err := ec.field_Query_achievement_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1249,7 +1249,7 @@ func (ec *executionContext) _Query_achivement(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Achivement(rctx, args["id"].(string))
+		return ec.resolvers.Query().Achievement(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2712,7 +2712,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_project(ctx, field)
 				return res
 			})
-		case "achivement":
+		case "achievement":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -2720,7 +2720,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_achivement(ctx, field)
+				res = ec._Query_achievement(ctx, field)
 				return res
 			})
 		case "projectAchievements":

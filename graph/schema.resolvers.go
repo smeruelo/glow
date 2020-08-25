@@ -60,7 +60,7 @@ func (r *queryResolver) Project(ctx context.Context, id string) (*model.Project,
 	return &p, err
 }
 
-func (r *queryResolver) Achivement(ctx context.Context, id string) (*model.Achievement, error) {
+func (r *queryResolver) Achievement(ctx context.Context, id string) (*model.Achievement, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
