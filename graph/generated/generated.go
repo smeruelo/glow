@@ -56,7 +56,7 @@ type ComplexityRoot struct {
 		CreateProject     func(childComplexity int, input model.NewProject) int
 		DeleteAchievement func(childComplexity int, id string, projectID string) int
 		DeleteProject     func(childComplexity int, id string) int
-		UpdateAchievement func(childComplexity int, id string, input *model.AchievementData) int
+		UpdateAchievement func(childComplexity int, id string, input model.AchievementData) int
 		UpdateProject     func(childComplexity int, id string, input model.NewProject) int
 	}
 
@@ -81,7 +81,7 @@ type MutationResolver interface {
 	UpdateProject(ctx context.Context, id string, input model.NewProject) (*model.Project, error)
 	DeleteProject(ctx context.Context, id string) (string, error)
 	CreateAchievement(ctx context.Context, projectID string) (*model.Achievement, error)
-	UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error)
+	UpdateAchievement(ctx context.Context, id string, input model.AchievementData) (*model.Achievement, error)
 	DeleteAchievement(ctx context.Context, id string, projectID string) (string, error)
 }
 type QueryResolver interface {
@@ -200,7 +200,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateAchievement(childComplexity, args["id"].(string), args["input"].(*model.AchievementData)), true
+		return e.complexity.Mutation.UpdateAchievement(childComplexity, args["id"].(string), args["input"].(model.AchievementData)), true
 
 	case "Mutation.updateProject":
 		if e.complexity.Mutation.UpdateProject == nil {
@@ -395,7 +395,7 @@ type Mutation {
   updateProject(id: ID!, input: NewProject!): Project!
   deleteProject(id: ID!): ID!
   createAchievement(projectID: ID!): Achievement!
-  updateAchievement(id: ID!, input: AchievementData): Achievement!
+  updateAchievement(id: ID!, input: AchievementData!): Achievement!
   deleteAchievement(id: ID!, projectID: ID!): ID!
 }
 `, BuiltIn: false},
@@ -487,10 +487,10 @@ func (ec *executionContext) field_Mutation_updateAchievement_args(ctx context.Co
 		}
 	}
 	args["id"] = arg0
-	var arg1 *model.AchievementData
+	var arg1 model.AchievementData
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithFieldInputContext(ctx, graphql.NewFieldInputWithField("input"))
-		arg1, err = ec.unmarshalOAchievementData2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx, tmp)
+		arg1, err = ec.unmarshalNAchievementData2githubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -979,7 +979,7 @@ func (ec *executionContext) _Mutation_updateAchievement(ctx context.Context, fie
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateAchievement(rctx, args["id"].(string), args["input"].(*model.AchievementData))
+		return ec.resolvers.Mutation().UpdateAchievement(rctx, args["id"].(string), args["input"].(model.AchievementData))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3089,6 +3089,11 @@ func (ec *executionContext) marshalNAchievement2ᚖgithubᚗcomᚋsmerueloᚋglo
 	return ec._Achievement(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNAchievementData2githubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx context.Context, v interface{}) (model.AchievementData, error) {
+	res, err := ec.unmarshalInputAchievementData(ctx, v)
+	return res, graphql.WrapErrorWithInputPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.WrapErrorWithInputPath(ctx, err)
@@ -3439,14 +3444,6 @@ func (ec *executionContext) marshalOAchievement2ᚖgithubᚗcomᚋsmerueloᚋglo
 		return graphql.Null
 	}
 	return ec._Achievement(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOAchievementData2ᚖgithubᚗcomᚋsmerueloᚋglowᚋgraphᚋmodelᚐAchievementData(ctx context.Context, v interface{}) (*model.AchievementData, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputAchievementData(ctx, v)
-	return &res, graphql.WrapErrorWithInputPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

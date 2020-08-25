@@ -37,6 +37,6 @@ type Mutation {
   updateProject(id: ID!, input: NewProject!): Project!
   deleteProject(id: ID!): ID!
   createAchievement(projectID: ID!): Achievement!
-  updateAchievement(id: ID!, input: AchievementData): Achievement!
+  updateAchievement(id: ID!, input: AchievementData!): Achievement!
   deleteAchievement(id: ID!, projectID: ID!): ID!
 }

@@ -35,7 +35,7 @@ func (r *mutationResolver) CreateAchievement(ctx context.Context, projectID stri
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) UpdateAchievement(ctx context.Context, id string, input *model.AchievementData) (*model.Achievement, error) {
+func (r *mutationResolver) UpdateAchievement(ctx context.Context, id string, input model.AchievementData) (*model.Achievement, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
